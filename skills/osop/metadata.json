@@ -1,0 +1,48 @@
+{
+  "name": "osop",
+  "version": "0.1.0",
+  "description": "OSOP workflow authoring, validation, and execution skill for OpenClaw-compatible AI agents.",
+  "author": "osop",
+  "license": "Apache-2.0",
+  "homepage": "https://osop.ai",
+  "repository": "https://github.com/osop/osop-openclaw-skill",
+  "skill_file": "SKILL.md",
+  "prompts": {
+    "system": "../../prompts/system-prompt.md",
+    "policy": "../../prompts/policy-pack.md"
+  },
+  "mcp": {
+    "server_name": "osop",
+    "url_env": "OSOP_MCP_URL",
+    "tools": [
+      "osop.validate",
+      "osop.run",
+      "osop.render",
+      "osop.test",
+      "osop.optimize",
+      "osop.import",
+      "osop.export"
+    ]
+  },
+  "env_gating": {
+    "required": [
+      {
+        "name": "OSOP_MCP_URL",
+        "description": "URL of the OSOP MCP server. The skill will not activate unless this is set.",
+        "example": "http://localhost:8080"
+      }
+    ],
+    "optional": [
+      {
+        "name": "OSOP_APPROVAL_MODE",
+        "description": "Controls approval gate behavior. 'auto' skips human approval, 'manual' requires it.",
+        "default": "manual",
+        "allowed_values": ["auto", "manual"]
+      }
+    ]
+  },
+  "tags": ["workflow", "automation", "sop", "process", "devops", "ci-cd"],
+  "compatibility": {
+    "openclaw": ">=0.1.0"
+  }
+}
