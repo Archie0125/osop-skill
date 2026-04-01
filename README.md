@@ -7,13 +7,13 @@ Three Claude Code skills for workflow logging, risk review, and self-optimizatio
 ## Install
 
 ```bash
-claude /install-plugin https://github.com/Archie0125/osop-openclaw-skill
+claude /install-plugin https://github.com/Archie0125/osop-skill
 ```
 
 Or manually: clone this repo and run Claude Code with `--plugin-dir`:
 ```bash
-git clone https://github.com/Archie0125/osop-openclaw-skill.git
-claude --plugin-dir ./osop-openclaw-skill
+git clone https://github.com/Archie0125/osop-skill.git
+claude --plugin-dir ./osop-skill
 ```
 
 ## Skills
@@ -50,7 +50,7 @@ Reads past `.osoplog` files, identifies slow steps and failure hotspots, suggest
 If you just want session logging without installing the plugin, copy `CLAUDE.md` into your project:
 
 ```bash
-curl -O https://raw.githubusercontent.com/Archie0125/osop-openclaw-skill/main/CLAUDE.md
+curl -O https://raw.githubusercontent.com/Archie0125/osop-skill/main/CLAUDE.md
 ```
 
 ## Structure

@@ -4,7 +4,7 @@ version: 1.0.0
 description: OSOP workflow authoring, validation, risk analysis, and self-optimization skill
 author: osop
 homepage: https://osop.ai
-repository: https://github.com/Archie0125/osop-openclaw-skill
+repository: https://github.com/Archie0125/osop-skill
 license: Apache-2.0
 tags:
   - workflow

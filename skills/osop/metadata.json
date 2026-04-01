@@ -5,7 +5,7 @@
   "author": "osop",
   "license": "Apache-2.0",
   "homepage": "https://osop.ai",
-  "repository": "https://github.com/Archie0125/osop-openclaw-skill",
+  "repository": "https://github.com/Archie0125/osop-skill",
   "skill_file": "SKILL.md",
   "prompts": {
     "system": "../../prompts/system-prompt.md",
