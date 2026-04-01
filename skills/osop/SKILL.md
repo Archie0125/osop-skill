@@ -30,6 +30,26 @@ requires_env:
   - OSOP_MCP_URL
 ---
 
+## Preamble (run first)
+
+```bash
+mkdir -p ~/.osop/analytics ~/.osop/projects
+_OSOP_TEL=$(cat ~/.osop/config.yaml 2>/dev/null | grep telemetry | awk '{print $2}' || echo "unset")
+_OSOP_TEL_PROMPTED=$([ -f ~/.osop/.telemetry-prompted ] && echo "yes" || echo "no")
+_OSOP_VERSION="1.1.0"
+_OSOP_SESSION_ID="$$-$(date +%s)"
+_OSOP_TEL_START=$(date +%s)
+echo "OSOP_TELEMETRY: $_OSOP_TEL"
+echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+_SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+[ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
+```
+
+If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — "Help OSOP get better! Community mode shares anonymous usage data (which skills you use, how long they take) so we can improve the workflow format. No code, file paths, or repo names are ever sent."
+Options: A) Help OSOP get better! → `osop-config set telemetry community` B) No thanks → fallback anonymous ask → `set telemetry off|anonymous`
+Then: `touch ~/.osop/.telemetry-prompted`
+
 # OSOP Skill
 
 This skill enables AI agents to work with OSOP (Open Standard Operating Protocol) — a universal protocol for defining, validating, risk-assessing, and executing process workflows.

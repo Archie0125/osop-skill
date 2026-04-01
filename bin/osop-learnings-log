@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# osop-learnings-log — append an operational learning for the current project
+# Usage: osop-learnings-log '<json>'
+# JSON format: {"skill":"NAME","type":"operational|pitfall|optimization","key":"SHORT_KEY","insight":"DESCRIPTION","confidence":N,"source":"observed|inferred|documented"}
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "unknown")
+SLUG=$(basename "$REPO_ROOT" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+
+LEARNINGS_DIR="${HOME}/.osop/projects/${SLUG}"
+LEARNINGS_FILE="${LEARNINGS_DIR}/learnings.jsonl"
+mkdir -p "$LEARNINGS_DIR"
+
+INPUT="${1:?Usage: osop-learnings-log '<json>'}"
+
+# Add timestamp if not present
+TS=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date +%Y-%m-%dT%H:%M:%SZ)
+if echo "$INPUT" | grep -q '"ts"'; then
+  echo "$INPUT" >> "$LEARNINGS_FILE"
+else
+  # Inject ts at start of object
+  echo "$INPUT" | sed "s/^{/{\"ts\":\"${TS}\",/" >> "$LEARNINGS_FILE"
+fi

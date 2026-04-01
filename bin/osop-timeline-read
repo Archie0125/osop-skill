@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# osop-timeline-read — read recent timeline events for the current project
+# Usage: osop-timeline-read [--last N] [--branch BRANCH] [--skill SKILL]
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "unknown")
+SLUG=$(basename "$REPO_ROOT" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+
+TIMELINE_FILE="${HOME}/.osop/projects/${SLUG}/timeline.jsonl"
+
+if [ ! -f "$TIMELINE_FILE" ]; then
+  echo "No timeline data for project: $SLUG"
+  exit 0
+fi
+
+# Parse args
+LAST=10 BRANCH="" SKILL=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --last)   LAST="$2"; shift 2 ;;
+    --branch) BRANCH="$2"; shift 2 ;;
+    --skill)  SKILL="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+# Filter and display
+DATA=$(cat "$TIMELINE_FILE")
+
+if [ -n "$BRANCH" ]; then
+  DATA=$(echo "$DATA" | grep "\"branch\":\"${BRANCH}\"" || true)
+fi
+
+if [ -n "$SKILL" ]; then
+  DATA=$(echo "$DATA" | grep "\"skill\":\"${SKILL}\"" || true)
+fi
+
+if [ -z "$DATA" ]; then
+  echo "No matching timeline events."
+  exit 0
+fi
+
+echo "$DATA" | tail -n "$LAST"

@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# osop-telemetry-log — append a telemetry event to skill-usage.jsonl
+# Usage: osop-telemetry-log --skill NAME --duration SECS --outcome success|error|abort [--session-id ID] [--error-class CLASS] [--error-message MSG]
+set -euo pipefail
+
+ANALYTICS_DIR="${HOME}/.osop/analytics"
+JSONL_FILE="${ANALYTICS_DIR}/skill-usage.jsonl"
+OSOP_VERSION="1.1.0"
+
+mkdir -p "$ANALYTICS_DIR"
+
+# Parse args
+SKILL="" DURATION="0" OUTCOME="unknown" SESSION_ID="" ERROR_CLASS="" ERROR_MSG=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skill)       SKILL="$2"; shift 2 ;;
+    --duration)    DURATION="$2"; shift 2 ;;
+    --outcome)     OUTCOME="$2"; shift 2 ;;
+    --session-id)  SESSION_ID="$2"; shift 2 ;;
+    --error-class) ERROR_CLASS="$2"; shift 2 ;;
+    --error-message) ERROR_MSG="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+# Sanitize strings (prevent JSON injection)
+json_safe() { printf '%s' "$1" | tr -d '"\\\n\r\t' | head -c 200; }
+
+SKILL=$(json_safe "$SKILL")
+OUTCOME=$(json_safe "$OUTCOME")
+ERROR_CLASS=$(json_safe "$ERROR_CLASS")
+ERROR_MSG=$(json_safe "$ERROR_MSG")
+SESSION_ID=$(json_safe "$SESSION_ID")
+
+# Cap unreasonable durations
+if [[ "$DURATION" -gt 86400 ]] 2>/dev/null; then DURATION=86400; fi
+if [[ "$DURATION" -lt 0 ]] 2>/dev/null; then DURATION=0; fi
+
+# Get telemetry tier
+TIER=$("$(dirname "$0")/osop-config" get telemetry 2>/dev/null || echo "off")
+if [ "$TIER" = "off" ]; then exit 0; fi
+
+# Get or create installation ID (community tier only)
+INSTALL_ID=""
+if [ "$TIER" = "community" ]; then
+  ID_FILE="${HOME}/.osop/installation-id"
+  if [ -f "$ID_FILE" ]; then
+    INSTALL_ID=$(cat "$ID_FILE")
+  else
+    if command -v uuidgen >/dev/null 2>&1; then
+      INSTALL_ID=$(uuidgen | tr '[:upper:]' '[:lower:]' | tr -d '-')
+    elif [ -f /proc/sys/kernel/random/uuid ]; then
+      INSTALL_ID=$(cat /proc/sys/kernel/random/uuid | tr -d '-')
+    else
+      INSTALL_ID=$(od -An -tx1 -N16 /dev/urandom 2>/dev/null | tr -d ' \n' || echo "unknown")
+    fi
+    echo "$INSTALL_ID" > "$ID_FILE"
+  fi
+fi
+
+# Get OS info
+OS_INFO=$(uname -s -r 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+ARCH=$(uname -m 2>/dev/null || echo "unknown")
+
+# Timestamp
+TS=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date +%Y-%m-%dT%H:%M:%SZ)
+
+# Helper: format nullable JSON string
+json_nullable() { [ -n "$1" ] && printf '"%s"' "$1" || printf 'null'; }
+
+# Build JSON event
+_EC=$(json_nullable "$ERROR_CLASS")
+_EM=$(json_nullable "$ERROR_MSG")
+_II=$(json_nullable "$INSTALL_ID")
+EVENT="{\"v\":1,\"ts\":\"${TS}\",\"event_type\":\"skill_run\",\"skill\":\"${SKILL}\",\"session_id\":\"${SESSION_ID}\",\"osop_version\":\"${OSOP_VERSION}\",\"os\":\"${OS_INFO}\",\"arch\":\"${ARCH}\",\"duration_s\":${DURATION},\"outcome\":\"${OUTCOME}\",\"error_class\":${_EC},\"error_message\":${_EM},\"installation_id\":${_II},\"source\":\"live\"}"
+
+# Append to JSONL
+echo "$EVENT" >> "$JSONL_FILE"
+
+# Finalize any stale .pending markers from crashed sessions
+for pending in "$ANALYTICS_DIR"/.pending-*; do
+  [ -f "$pending" ] || continue
+  PENDING_SID=$(basename "$pending" | sed 's/^\.pending-//')
+  [ "$PENDING_SID" = "$SESSION_ID" ] && continue
+  STALE_DATA=$(cat "$pending" 2>/dev/null || echo "{}")
+  STALE_SKILL=$(echo "$STALE_DATA" | grep -o '"skill":"[^"]*"' | head -1 | sed 's/"skill":"//;s/"//')
+  echo "{\"v\":1,\"ts\":\"${TS}\",\"event_type\":\"skill_run\",\"skill\":\"${STALE_SKILL:-unknown}\",\"session_id\":\"${PENDING_SID}\",\"osop_version\":\"${OSOP_VERSION}\",\"os\":\"${OS_INFO}\",\"duration_s\":null,\"outcome\":\"unknown\",\"installation_id\":${_II},\"source\":\"live\"}" >> "$JSONL_FILE"
+  rm -f "$pending"
+done
+
+# Clean up own pending marker
+rm -f "$ANALYTICS_DIR/.pending-${SESSION_ID}" 2>/dev/null || true

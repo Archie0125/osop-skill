@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# osop-config — read/write ~/.osop/config.yaml
+# Usage: osop-config get <key>
+#        osop-config set <key> <value>
+set -euo pipefail
+
+CONFIG_DIR="${HOME}/.osop"
+CONFIG_FILE="${CONFIG_DIR}/config.yaml"
+
+ensure_config() {
+  mkdir -p "$CONFIG_DIR"
+  [ -f "$CONFIG_FILE" ] || echo "# OSOP configuration" > "$CONFIG_FILE"
+}
+
+cmd_get() {
+  local key="${1:?Usage: osop-config get <key>}"
+  ensure_config
+  grep "^${key}:" "$CONFIG_FILE" 2>/dev/null | sed "s/^${key}:[[:space:]]*//" | tr -d '"' || true
+}
+
+cmd_set() {
+  local key="${1:?Usage: osop-config set <key> <value>}"
+  local value="${2:?Usage: osop-config set <key> <value>}"
+  ensure_config
+  if grep -q "^${key}:" "$CONFIG_FILE" 2>/dev/null; then
+    local tmp
+    tmp=$(mktemp)
+    sed "s|^${key}:.*|${key}: ${value}|" "$CONFIG_FILE" > "$tmp" && mv "$tmp" "$CONFIG_FILE"
+  else
+    echo "${key}: ${value}" >> "$CONFIG_FILE"
+  fi
+}
+
+case "${1:-}" in
+  get) cmd_get "${2:-}" ;;
+  set) cmd_set "${2:-}" "${3:-}" ;;
+  *)   echo "Usage: osop-config {get|set} <key> [value]"; exit 1 ;;
+esac

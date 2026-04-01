@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# osop-timeline-log — append a timeline event for the current project
+# Usage: osop-timeline-log --skill NAME --event started|completed [--branch BRANCH] [--duration SECS] [--outcome success|error] [--session ID]
+set -euo pipefail
+
+# Determine project slug from git root
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "unknown")
+SLUG=$(basename "$REPO_ROOT" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+
+TIMELINE_DIR="${HOME}/.osop/projects/${SLUG}"
+TIMELINE_FILE="${TIMELINE_DIR}/timeline.jsonl"
+mkdir -p "$TIMELINE_DIR"
+
+# Parse args
+SKILL="" EVENT="" BRANCH="" DURATION="" OUTCOME="" SESSION=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skill)    SKILL="$2"; shift 2 ;;
+    --event)    EVENT="$2"; shift 2 ;;
+    --branch)   BRANCH="$2"; shift 2 ;;
+    --duration) DURATION="$2"; shift 2 ;;
+    --outcome)  OUTCOME="$2"; shift 2 ;;
+    --session)  SESSION="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+[ -z "$BRANCH" ] && BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+
+TS=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date +%Y-%m-%dT%H:%M:%SZ)
+
+# Build JSON
+ENTRY="{\"ts\":\"${TS}\",\"skill\":\"${SKILL}\",\"event\":\"${EVENT}\",\"branch\":\"${BRANCH}\""
+[ -n "$DURATION" ] && ENTRY="${ENTRY},\"duration_s\":${DURATION}"
+[ -n "$OUTCOME" ] && ENTRY="${ENTRY},\"outcome\":\"${OUTCOME}\""
+[ -n "$SESSION" ] && ENTRY="${ENTRY},\"session\":\"${SESSION}\""
+ENTRY="${ENTRY}}"
+
+echo "$ENTRY" >> "$TIMELINE_FILE"

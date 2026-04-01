@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# osop-learnings-search — search operational learnings for the current project
+# Usage: osop-learnings-search [--type TYPE] [--keyword KEYWORD] [--last N] [--cross-project]
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "unknown")
+SLUG=$(basename "$REPO_ROOT" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+
+LEARNINGS_FILE="${HOME}/.osop/projects/${SLUG}/learnings.jsonl"
+
+# Parse args
+TYPE="" KEYWORD="" LAST=20 CROSS_PROJECT=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --type)          TYPE="$2"; shift 2 ;;
+    --keyword)       KEYWORD="$2"; shift 2 ;;
+    --last)          LAST="$2"; shift 2 ;;
+    --cross-project) CROSS_PROJECT=true; shift ;;
+    *) shift ;;
+  esac
+done
+
+search_file() {
+  local file="$1"
+  local tag="${2:-}"
+
+  [ -f "$file" ] || return 0
+
+  local data
+  data=$(cat "$file")
+
+  if [ -n "$TYPE" ]; then
+    data=$(echo "$data" | grep "\"type\":\"${TYPE}\"" || true)
+  fi
+
+  if [ -n "$KEYWORD" ]; then
+    data=$(echo "$data" | grep -i "$KEYWORD" || true)
+  fi
+
+  if [ -n "$data" ]; then
+    if [ -n "$tag" ]; then
+      echo "$data" | tail -n "$LAST" | sed "s/}$/,\"_project\":\"${tag}\"}/"
+    else
+      echo "$data" | tail -n "$LAST"
+    fi
+  fi
+}
+
+# Search current project
+search_file "$LEARNINGS_FILE"
+
+# Optionally search other projects
+if [ "$CROSS_PROJECT" = true ]; then
+  PROJECTS_DIR="${HOME}/.osop/projects"
+  [ -d "$PROJECTS_DIR" ] || exit 0
+
+  count=0
+  for dir in "$PROJECTS_DIR"/*/; do
+    [ -d "$dir" ] || continue
+    project_slug=$(basename "$dir")
+    [ "$project_slug" = "$SLUG" ] && continue
+
+    other_file="${dir}learnings.jsonl"
+    search_file "$other_file" "$project_slug"
+
+    count=$((count + 1))
+    [ $count -ge 5 ] && break
+  done
+fi

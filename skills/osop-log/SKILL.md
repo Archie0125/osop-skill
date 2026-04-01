@@ -5,6 +5,33 @@ argument-hint: [short description of what was done]
 allowed-tools: Read, Glob, Grep, Write, Bash
 ---
 
+## Preamble (run first)
+
+```bash
+mkdir -p ~/.osop/analytics ~/.osop/projects
+_OSOP_TEL=$(cat ~/.osop/config.yaml 2>/dev/null | grep telemetry | awk '{print $2}' || echo "unset")
+_OSOP_TEL_PROMPTED=$([ -f ~/.osop/.telemetry-prompted ] && echo "yes" || echo "no")
+_OSOP_VERSION="1.1.0"
+_OSOP_SESSION_ID="$$-$(date +%s)"
+_OSOP_TEL_START=$(date +%s)
+echo "OSOP_TELEMETRY: $_OSOP_TEL"
+echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
+# Log timeline start
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-log --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+# Create pending marker for crash detection
+echo "{\"skill\":\"osop-log\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
+# Show recent learnings
+_SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
+[ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
+```
+
+If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion to ask:
+> Help OSOP get better! Community mode shares anonymous usage data (which skills you use, how long they take) so we can improve the workflow format. No code, file paths, or repo names are ever sent.
+
+Options: A) Help OSOP get better! (recommended) → run `${CLAUDE_SKILL_DIR}/../../bin/osop-config set telemetry community`
+B) No thanks → ask: "Anonymous mode? Just a counter, no ID." → A) `set telemetry anonymous` B) `set telemetry off`
+Then: `touch ~/.osop/.telemetry-prompted`
+
 # OSOP Session Logger
 
 You just completed a task. Now produce a structured session log.
@@ -135,3 +162,14 @@ In the log, add `parent_id` and `spawn_index`:
 - Estimate durations based on tool call timing
 - If the task failed, set status to FAILED and include error details
 - Tell the user they can view the log at https://osop-editor.vercel.app
+
+## Epilogue (run last)
+
+```bash
+_OSOP_TEL_END=$(date +%s)
+_OSOP_TEL_DUR=$(( _OSOP_TEL_END - _OSOP_TEL_START ))
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-log --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill osop-log --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
+```
+
+Replace `OUTCOME` with `success` if the session log was generated successfully, or `error` if it failed.
