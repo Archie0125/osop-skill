@@ -140,6 +140,36 @@ Nodes can define input/output contracts for type safety:
 - **"Show me the diagram"** — Call `osop.render` with `format: mermaid`.
 - **"Generate a report"** — Call `osop.report` with the workflow and optional `.osoplog` for execution data.
 
+## Self-Optimization Protocol
+
+OSOP workflows improve over time through a feedback loop:
+
+### Before Execution
+1. **Read the `.osop` workflow** — understand the current SOP.
+2. **Check run history** — if past `.osoplog` files exist for this workflow, load them.
+3. **Call `osop.optimize`** with the workflow content AND `run_history` (JSON array of past runs).
+4. **Review suggestions** — if the optimizer returns high-priority suggestions (add_retry, restructure, parallelize), present them to the user.
+5. **Apply if approved** — if the user agrees, use the `proposed_yaml` from the optimizer. This becomes the new version of the SOP.
+6. **Execute the (possibly improved) workflow** — run with `osop.run`.
+
+### After Execution
+7. **Save the `.osoplog`** — every execution produces an immutable evidence trail.
+8. **Record the iteration** — if the workflow was modified, note which suggestions were applied and their impact.
+
+### The Feedback Loop
+```
+Execute .osop → Produce .osoplog → Aggregate stats →
+Analyze (slow steps, failures, bottlenecks) →
+Suggest improvements → User approves → Apply changes →
+Execute improved .osop → Better .osoplog → Repeat
+```
+
+This ensures:
+- **Consistency** — every execution follows the defined SOP
+- **Evidence** — every action is logged in .osoplog
+- **Improvement** — the SOP gets better with each iteration
+- **Accountability** — changes are tracked with before/after versions
+
 ## Post-Task Reporting
 
 After completing a multi-step task, use `osop.report` to generate an execution report for the user. This provides a structured summary of what was done, which steps succeeded or failed, total cost, and timing. Include the `.osoplog` content when available to produce an execution-mode report with per-node details.
