@@ -1,57 +1,83 @@
-# OSOP Skills for Claude Code
+# OSOP Skill
 
 [![OSOP Compatible](https://img.shields.io/badge/OSOP-compatible-blue)](https://osop.ai)
 
-Three Claude Code skills for workflow logging, risk review, and self-optimization.
+AI coding assistant skill for structured workflow logging and reporting. Works with **Claude Code, Codex, Grok, Cursor, OpenClaw** — any tool that reads markdown instructions or supports Claude Code plugins.
+
+## What It Does
+
+1. **Creates `.osop` + `.osoplog.yaml`** — structured records of what the AI did, step by step
+2. **Converts to HTML reports** — standalone, dark-mode, expandable, opens in any browser
 
 ## Install
 
+### Claude Code (Plugin)
 ```bash
 claude /install-plugin https://github.com/Archie0125/osop-skill
 ```
 
-Or manually: clone this repo and run Claude Code with `--plugin-dir`:
-```bash
-git clone https://github.com/Archie0125/osop-skill.git
-claude --plugin-dir ./osop-skill
-```
+Gives you 4 slash commands:
+- `/osop:osop-log` — Record what you just did
+- `/osop:osop-report` — Convert .osop to HTML
+- `/osop:osop-review` — Risk-analyze a workflow
+- `/osop:osop-optimize` — Improve workflow from history
 
-## Skills
+### Any AI Tool (Drop-in)
 
-### `/osop:osop-log` — Session Logging
-
-After completing a task, run:
-```
-/osop:osop-log fixed auth token refresh race condition
-```
-
-Creates structured `.osop` + `.osoplog.yaml` in `sessions/` recording every step, tool used, and decision made. View at https://osop-editor.vercel.app with step-by-step replay.
-
-### `/osop:osop-review` — Risk Review
-
-Before running someone else's workflow:
-```
-/osop:osop-review path/to/workflow.osop
-```
-
-Analyzes for: destructive commands, overly broad permissions, missing approval gates, hardcoded secrets, unbounded costs. Returns a risk score (0-100) with verdict.
-
-### `/osop:osop-optimize` — Self-Optimization
-
-After running a workflow multiple times:
-```
-/osop:osop-optimize path/to/workflow.osop
-```
-
-Reads past `.osoplog` files, identifies slow steps and failure hotspots, suggests improvements (retry policies, parallelization, timeouts), and can apply changes with your approval.
-
-## Alternative: Drop-in CLAUDE.md
-
-If you just want session logging without installing the plugin, copy `CLAUDE.md` into your project:
+Copy the content of `CLAUDE.md` into your AI tool's system prompt or project instructions file. Works with Codex, Grok, Cursor, or any tool that reads markdown instructions.
 
 ```bash
 curl -O https://raw.githubusercontent.com/Archie0125/osop-skill/main/CLAUDE.md
 ```
+
+### Standalone Report Generator
+
+Generate HTML reports without any AI tool:
+
+```bash
+pip install pyyaml
+python scripts/osop-report.py workflow.osop execution.osoplog.yaml -o report.html
+```
+
+## Output Examples
+
+After a session, you get:
+
+**`sessions/2026-04-01-fix-auth-bug.osop`** — workflow definition
+```yaml
+osop_version: "1.0"
+id: session-fix-auth-bug
+name: "Fix Authentication Bug"
+nodes:
+  - id: explore
+    type: agent
+    subtype: explore
+    name: "Search Auth Code"
+  - id: fix
+    type: mcp
+    name: "Write Fix"
+edges:
+  - from: explore
+    to: fix
+```
+
+**`sessions/2026-04-01-fix-auth-bug.osoplog.yaml`** — what actually happened
+```yaml
+osoplog_version: "1.0"
+status: COMPLETED
+duration_ms: 930000
+node_records:
+  - node_id: explore
+    status: COMPLETED
+    tools_used:
+      - { tool: Grep, calls: 5 }
+      - { tool: Read, calls: 4 }
+    reasoning:
+      question: "Where is the token refresh logic?"
+      selected: "src/auth/token-refresh.ts"
+```
+
+**`report.html`** — self-contained visual report (dark mode, <15KB, zero deps)
 
 ## Structure
 
@@ -59,25 +85,24 @@ curl -O https://raw.githubusercontent.com/Archie0125/osop-skill/main/CLAUDE.md
 .claude-plugin/plugin.json         # Claude Code plugin manifest
 skills/
   osop-log/SKILL.md                # /osop:osop-log — session logging
-  osop-review/SKILL.md             # /osop:osop-review — risk review
-  osop-optimize/SKILL.md           # /osop:osop-optimize — self-optimization
+  osop-report/SKILL.md             # /osop:osop-report — HTML generation
+  osop-review/SKILL.md             # /osop:osop-review — risk analysis
+  osop-optimize/SKILL.md           # /osop:osop-optimize — self-improvement
+scripts/
+  osop-report.py                   # Standalone HTML report generator (Python)
 prompts/
-  system-prompt.md                 # Full OSOP knowledge base (16 node types, 13 edge modes)
+  system-prompt.md                 # Full OSOP knowledge (16 node types, 13 edge modes)
   policy-pack.md                   # 9 safety policies
 examples/
-  fix-auth-bug.osop                # Example workflow with sub-agents
-  fix-auth-bug.osoplog.yaml        # Example execution log
-CLAUDE.md                          # Drop-in alternative (no plugin needed)
+  fix-auth-bug.osop                # Example with sub-agents + spawn edges
+  fix-auth-bug.osoplog.yaml        # Full execution log with tools, reasoning
+CLAUDE.md                          # Drop-in for any AI tool
 ```
 
-## Visualize Logs
+## View Reports
 
-Open `.osop` + `.osoplog.yaml` at **https://osop-editor.vercel.app**:
-- Step-by-step replay with play/pause
-- Risk analysis overlay
-- Sub-agent hierarchy tree
-- Tool usage per step
-- AI reasoning decisions
+- Open HTML files in any browser
+- Or upload `.osop` + `.osoplog.yaml` to **https://osop-editor.vercel.app** for interactive replay
 
 ## License
 

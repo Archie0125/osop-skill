@@ -137,3 +137,15 @@ Save to `sessions/` in the project root:
 - After feature implementations
 - After refactoring work
 - When the user asks "what did you do?"
+
+### Converting to HTML report
+
+After creating the .osop and .osoplog.yaml files, generate an HTML report:
+
+```bash
+python osop-report.py <file.osop> [file.osoplog.yaml] -o <output.html>
+```
+
+If the `osop-report.py` script is not available locally, the user can view the files at https://osop-editor.vercel.app (drag and drop both files).
+
+The HTML report is self-contained (<15KB), supports dark mode, and shows expandable node details with tool usage, AI reasoning, and execution status.
