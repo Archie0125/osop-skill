@@ -6,7 +6,7 @@ This skill teaches Claude Code to produce **OSOP session logs** after significan
 
 ## How to Use in Any Project
 
-Copy this file (or the content below) into your project's `CLAUDE.md`:
+Copy this file (or the content below) into your project's `CLAUDE.md`:h
 
 ---
 
@@ -93,6 +93,7 @@ result_summary: "<1-2 sentence summary>"
 | Analyze/reason | `agent` | `llm` |
 | Search codebase | `mcp` | `tool` |
 | Ask user | `human` | `input` |
+| User reviews | `human` | `review` |
 | Spawn sub-agent | `agent` | `explore`/`plan`/`worker` |
 | API calls | `api` | `rest` |
 
