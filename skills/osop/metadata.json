@@ -1,6 +1,6 @@
 {
   "name": "osop",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "OSOP workflow authoring, validation, risk analysis, and self-optimization for AI agents.",
   "author": "osop",
   "license": "Apache-2.0",
@@ -45,6 +45,12 @@
   },
   "tags": ["workflow", "automation", "sop", "process", "devops", "ci-cd", "risk-analysis"],
   "compatibility": {
+    "claude-code": ">=1.0.0",
     "openclaw": ">=0.1.0"
+  },
+  "clawhub": {
+    "slug": "osop",
+    "category": "workflow-automation",
+    "sub_skills": ["osop-log", "osop-report", "osop-review", "osop-optimize"]
   }
 }

@@ -1,8 +1,8 @@
 ---
-name: osop-report
-description: Convert .osop and .osoplog.yaml into standalone HTML report with dark mode and expandable nodes
+name: sop-report
+description: "One command → standalone HTML report from any .osop + .osoplog. Dark mode, expandable nodes, share with anyone."
 version: 1.2.0
-emoji: "\U0001F4CA"
+emoji: "\U0001F4C8"
 homepage: https://osop.ai
 argument-hint: <file.osop> [file.osoplog.yaml]
 allowed-tools: Read, Bash, Write
@@ -33,15 +33,17 @@ _OSOP_SESSION_ID="$$-$(date +%s)"
 _OSOP_TEL_START=$(date +%s)
 echo "OSOP_TELEMETRY: $_OSOP_TEL"
 echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-report --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
-echo "{\"skill\":\"osop-report\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill sop-report --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+echo "{\"skill\":\"sop-report\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
 _SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
 [ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
 ```
 
-If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — same prompt as osop-log preamble.
+If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — same prompt as auto-log preamble.
 
-# OSOP Report Generator
+# SOP Report
+
+# Part of The Loop — make processes better
 
 Convert workflow definition and/or execution log into a self-contained HTML report.
 
@@ -85,11 +87,11 @@ The HTML report includes:
 ```bash
 _OSOP_TEL_END=$(date +%s)
 _OSOP_TEL_DUR=$(( _OSOP_TEL_END - _OSOP_TEL_START ))
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-report --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
-${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill osop-report --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill sop-report --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill sop-report --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
 ```
 
 Replace `OUTCOME` with `success` or `error`. If the report generation fails, log a learning:
 ```bash
-${CLAUDE_SKILL_DIR}/../../bin/osop-learnings-log '{"skill":"osop-report","type":"pitfall","key":"ERROR_KEY","insight":"WHAT_WENT_WRONG","confidence":8,"source":"observed"}' 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-learnings-log '{"skill":"sop-report","type":"pitfall","key":"ERROR_KEY","insight":"WHAT_WENT_WRONG","confidence":8,"source":"observed"}' 2>/dev/null || true
 ```

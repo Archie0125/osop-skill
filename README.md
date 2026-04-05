@@ -1,109 +1,77 @@
-# OSOP Skill
+# OSOP — Structured Session Logs for AI Coding Agents
 
-[![OSOP Compatible](https://img.shields.io/badge/OSOP-compatible-blue)](https://osop.ai)
+Your AI coding assistant does complex multi-step work. But what did it actually do? OSOP gives you **structured, portable execution logs** — not chat transcripts.
 
-AI coding assistant skill for structured workflow logging and reporting. Works with **Claude Code, Codex, Grok, Cursor, OpenClaw** — any tool that reads markdown instructions or supports Claude Code plugins.
+## Install (One Line)
 
-## What It Does
-
-1. **Creates `.osop` + `.osoplog.yaml`** — structured records of what the AI did, step by step
-2. **Converts to HTML reports** — standalone, dark-mode, expandable, opens in any browser
-
-## Install
-
-### Claude Code (Plugin)
+**Option A — Copy CLAUDE.md into any project:**
 ```bash
-claude /install-plugin https://github.com/Archie0125/osop-skill
+curl -sL https://raw.githubusercontent.com/Archie0125/osop-openclaw-skill/main/CLAUDE.md >> CLAUDE.md
 ```
 
-Gives you 4 slash commands:
-- `/osop:osop-log` — Record what you just did
-- `/osop:osop-report` — Convert .osop to HTML
-- `/osop:osop-review` — Risk-analyze a workflow
-- `/osop:osop-optimize` — Improve workflow from history
-
-### Any AI Tool (Drop-in)
-
-Copy the content of `CLAUDE.md` into your AI tool's system prompt or project instructions file. Works with Codex, Grok, Cursor, or any tool that reads markdown instructions.
-
+**Option B — Claude Code plugin:**
 ```bash
-curl -O https://raw.githubusercontent.com/Archie0125/osop-skill/main/CLAUDE.md
+claude /install-plugin https://github.com/Archie0125/osop-openclaw-skill
 ```
 
-### Standalone Report Generator
-
-Generate HTML reports without any AI tool:
-
+**Option C — OpenClaw:**
 ```bash
-pip install pyyaml
-python scripts/osop-report.py workflow.osop execution.osoplog.yaml -o report.html
+clawhub install osop
 ```
 
-## Output Examples
+That's it. Claude Code will now generate `.osop` + `.osoplog.yaml` after multi-step tasks.
 
-After a session, you get:
-
-**`sessions/2026-04-01-fix-auth-bug.osop`** — workflow definition
-```yaml
-osop_version: "1.0"
-id: session-fix-auth-bug
-name: "Fix Authentication Bug"
-nodes:
-  - id: explore
-    type: agent
-    subtype: explore
-    name: "Search Auth Code"
-  - id: fix
-    type: mcp
-    name: "Write Fix"
-edges:
-  - from: explore
-    to: fix
-```
-
-**`sessions/2026-04-01-fix-auth-bug.osoplog.yaml`** — what actually happened
-```yaml
-osoplog_version: "1.0"
-status: COMPLETED
-duration_ms: 930000
-node_records:
-  - node_id: explore
-    status: COMPLETED
-    tools_used:
-      - { tool: Grep, calls: 5 }
-      - { tool: Read, calls: 4 }
-    reasoning:
-      question: "Where is the token refresh logic?"
-      selected: "src/auth/token-refresh.ts"
-```
-
-**`report.html`** — self-contained visual report (dark mode, <15KB, zero deps)
-
-## Structure
+## What You Get
 
 ```
-.claude-plugin/plugin.json         # Claude Code plugin manifest
-skills/
-  osop-log/SKILL.md                # /osop:osop-log — session logging
-  osop-report/SKILL.md             # /osop:osop-report — HTML generation
-  osop-review/SKILL.md             # /osop:osop-review — risk analysis
-  osop-optimize/SKILL.md           # /osop:osop-optimize — self-improvement
-scripts/
-  osop-report.py                   # Standalone HTML report generator (Python)
-prompts/
-  system-prompt.md                 # Full OSOP knowledge (16 node types, 13 edge modes)
-  policy-pack.md                   # 9 safety policies
-examples/
-  fix-auth-bug.osop                # Example with sub-agents + spawn edges
-  fix-auth-bug.osoplog.yaml        # Full execution log with tools, reasoning
-CLAUDE.md                          # Drop-in for any AI tool
+Before: 200-line chat transcript, hard to skim
+After:   Structured workflow + execution record → visual HTML report
 ```
 
-## View Reports
+### Two Files
 
-- Open HTML files in any browser
-- Or upload `.osop` + `.osoplog.yaml` to **https://osop-editor.vercel.app** for interactive replay
+| File | What | Example |
+|------|------|---------|
+| `.osop.yaml` | What was **planned** — DAG of steps | "Explore → Implement → Test → Review" |
+| `.osoplog.yaml` | What **actually happened** — timestamps, tools, outputs | "Read 4 files, edited 2, ran tests in 3.2s" |
+
+### View Reports
+
+Drag both files into https://osop-editor.vercel.app for:
+- Visual DAG diagram
+- Step-by-step execution timeline
+- Tool usage breakdown
+- Risk analysis overlay
+
+## OSOP Core — 4 Types, 4 Modes
+
+OSOP uses a minimal schema for AI agent workflows:
+
+**Node types:** `agent` (AI/LLM), `api` (HTTP), `cli` (shell), `human` (manual)
+**Edge modes:** `sequential`, `conditional`, `parallel`, `fallback`
+
+A complete workflow fits in 15-25 lines of YAML.
+
+## Skills
+
+| Skill | What it does |
+|-------|-------------|
+| `/osop` | Validate + render any .osop file |
+| `/osop:auto-log` | Auto-generate .osoplog after task completion |
+| `/osop:sop-report` | Generate standalone HTML report |
+| `/osop:sop-security` | Security risk scan before execution |
+| `/osop:sop-diff` | Compare two executions |
+
+## Works With
+
+Claude Code, Cursor, Windsurf, Codex, Copilot, Cline, Aider, Continue.dev, Devin, Zed, and more.
+
+## Links
+
+- **Visual Editor:** [osop-editor.vercel.app](https://osop-editor.vercel.app)
+- **Spec:** [github.com/Archie0125/osop-spec](https://github.com/Archie0125/osop-spec)
+- **Examples:** [github.com/Archie0125/osop-examples](https://github.com/Archie0125/osop-examples)
 
 ## License
 
-Apache License 2.0
+Apache 2.0

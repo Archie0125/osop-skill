@@ -1,6 +1,6 @@
 ---
-name: osop
-description: OSOP workflow authoring, validation, risk analysis, and self-optimization for AI agents
+name: sop-doc
+description: "See what any process does — browse .osop workflows visually, validate, render diagrams. Part of SOP Doc."
 version: 1.2.0
 emoji: "\U0001F4CB"
 homepage: https://osop.ai
@@ -36,7 +36,7 @@ _OSOP_SESSION_ID="$$-$(date +%s)"
 _OSOP_TEL_START=$(date +%s)
 echo "OSOP_TELEMETRY: $_OSOP_TEL"
 echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill sop-doc --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
 _SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
 [ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
 ```
@@ -45,7 +45,9 @@ If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — "Help OSOP get better! C
 Options: A) Help OSOP get better! → `osop-config set telemetry community` B) No thanks → fallback anonymous ask → `set telemetry off|anonymous`
 Then: `touch ~/.osop/.telemetry-prompted`
 
-# OSOP Skill
+# SOP Doc
+
+# Part of SOP Doc — understand how things work
 
 This skill enables AI agents to work with OSOP (Open Standard Operating Protocol) — a universal protocol for defining, validating, risk-assessing, and executing process workflows.
 

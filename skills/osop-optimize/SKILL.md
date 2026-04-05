@@ -1,8 +1,22 @@
 ---
 name: osop-optimize
-description: Analyze past .osoplog execution records and suggest improvements to the .osop workflow. Identifies slow steps, failure hotspots, and parallelization opportunities.
+description: Analyze .osoplog execution history to optimize workflows — finds slow steps and parallelization opportunities
+version: 1.2.0
+emoji: "\u26A1"
+homepage: https://osop.ai
 argument-hint: <path-to-osop-file>
 allowed-tools: Read, Glob, Grep, Write, Bash
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - bash
+      config:
+        - ~/.osop/config.yaml
+    install: []
+    always: false
+user-invocable: true
+disable-model-invocation: false
 ---
 
 ## Preamble (run first)

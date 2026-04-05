@@ -1,6 +1,6 @@
 ---
-name: osop-review
-description: Review .osop/.osoplog for security risks, permission gaps, and destructive commands
+name: sop-security
+description: "Scan any .osop workflow for risks before running it. Catches destructive commands, missing approval gates, broad permissions."
 version: 1.2.0
 emoji: "\U0001F6E1\uFE0F"
 homepage: https://osop.ai
@@ -30,15 +30,17 @@ _OSOP_SESSION_ID="$$-$(date +%s)"
 _OSOP_TEL_START=$(date +%s)
 echo "OSOP_TELEMETRY: $_OSOP_TEL"
 echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-review --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
-echo "{\"skill\":\"osop-review\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill sop-security --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+echo "{\"skill\":\"sop-security\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
 _SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
 [ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
 ```
 
-If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — same prompt as osop-log preamble.
+If `OSOP_TEL_PROMPTED` is `no`: use AskUserQuestion — same prompt as auto-log preamble.
 
-# OSOP Workflow Reviewer
+# SOP Security
+
+# Part of The Loop — make processes better
 
 Review a workflow or execution log for risks and issues.
 
@@ -96,8 +98,8 @@ If reviewing an execution log, also check:
 ```bash
 _OSOP_TEL_END=$(date +%s)
 _OSOP_TEL_DUR=$(( _OSOP_TEL_END - _OSOP_TEL_START ))
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-review --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
-${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill osop-review --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill sop-security --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill sop-security --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
 ```
 
 Replace `OUTCOME` with `success` or `error`.

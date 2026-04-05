@@ -1,6 +1,6 @@
 ---
-name: osop-log
-description: Generate OSOP session log — creates .osop workflow and .osoplog.yaml execution record
+name: auto-log
+description: "AI finishes a task → structured execution record generated automatically. Every step, every tool call, every decision recorded as .osoplog."
 version: 1.2.0
 emoji: "\U0001F4DD"
 homepage: https://osop.ai
@@ -31,9 +31,9 @@ _OSOP_TEL_START=$(date +%s)
 echo "OSOP_TELEMETRY: $_OSOP_TEL"
 echo "OSOP_TEL_PROMPTED: $_OSOP_TEL_PROMPTED"
 # Log timeline start
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-log --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill auto-log --event started --session "$_OSOP_SESSION_ID" 2>/dev/null || true
 # Create pending marker for crash detection
-echo "{\"skill\":\"osop-log\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
+echo "{\"skill\":\"auto-log\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > ~/.osop/analytics/.pending-"$_OSOP_SESSION_ID" 2>/dev/null || true
 # Show recent learnings
 _SLUG=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr ' ' '-' || echo "unknown")
 [ -f ~/.osop/projects/"$_SLUG"/learnings.jsonl ] && echo "--- Recent OSOP learnings ---" && tail -3 ~/.osop/projects/"$_SLUG"/learnings.jsonl 2>/dev/null || true
@@ -46,7 +46,9 @@ Options: A) Help OSOP get better! (recommended) → run `${CLAUDE_SKILL_DIR}/../
 B) No thanks → ask: "Anonymous mode? Just a counter, no ID." → A) `set telemetry anonymous` B) `set telemetry off`
 Then: `touch ~/.osop/.telemetry-prompted`
 
-# OSOP Session Logger
+# Auto Log
+
+# Part of The Loop — make processes better
 
 You just completed a task. Now produce a structured session log.
 
@@ -182,8 +184,8 @@ In the log, add `parent_id` and `spawn_index`:
 ```bash
 _OSOP_TEL_END=$(date +%s)
 _OSOP_TEL_DUR=$(( _OSOP_TEL_END - _OSOP_TEL_START ))
-${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill osop-log --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
-${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill osop-log --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
+${CLAUDE_SKILL_DIR}/../../bin/osop-timeline-log --skill auto-log --event completed --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session "$_OSOP_SESSION_ID" 2>/dev/null || true
+${CLAUDE_SKILL_DIR}/../../bin/osop-telemetry-log --skill auto-log --duration "$_OSOP_TEL_DUR" --outcome "OUTCOME" --session-id "$_OSOP_SESSION_ID" 2>/dev/null &
 ```
 
 Replace `OUTCOME` with `success` if the session log was generated successfully, or `error` if it failed.
